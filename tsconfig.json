@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "sourceMap":  true,
+        "outFile": "tetris.js"
+    },
+    "files": ["blockdata.ts","tetris.ts" ]
+
+}
+

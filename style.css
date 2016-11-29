@@ -1,0 +1,59 @@
+table {
+    border-spacing:  0;
+}
+#container tr, td{
+    background: gray;
+    width: 20px;
+    height: 20px;
+}
+
+#id{
+    
+}
+.block{
+    width: 20px;
+    height: 20px;
+}
+.blank {
+    background: black;
+}
+
+.opened{
+    background: gray;
+}
+.closed {
+    background: black;
+}
+.checked{
+    background: blue;
+}
+.mine{
+    background: red;
+}
+.cr_0{
+
+}
+.cr_1{
+
+}
+
+.cr_2{
+
+}
+.cr_3{
+    
+}
+
+.cr_4{
+
+}
+.cr_5{
+    
+}
+
+.cr_6{
+
+}
+.cr_7{
+    
+}
