@@ -26,9 +26,13 @@ table {
     border:1px solid white;
 }
 
+#game table{
+    padding:1px;
+}
 .block{
     width: 30px;
     height: 30px;
+    border: 1px solid black;
 }
 .blank {
     background: black;

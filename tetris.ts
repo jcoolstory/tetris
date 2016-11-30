@@ -336,7 +336,7 @@ class Renderer {
         var nextBlock = document.createElement("table");
         nextBlock.setAttribute("id","nextblock");
         for (var y = 0 ; y < 5 ; y++ ){
-            this.gameMap[y] = [];
+            this.nextBlock[y] = [];
         }
 
         for( var y = 0 ; y < 5 ; y++ ){
@@ -344,7 +344,7 @@ class Renderer {
             for (var x = 0 ; x < 5 ; x++){
                 var td = document.createElement("td");
                 td.setAttribute("class","block blank ");
-                this.gameMap[x][y] = td;
+                this.nextBlock[x][y] = td;
                 tr.appendChild(td);
             }
             nextBlock.appendChild(tr);
@@ -355,6 +355,7 @@ class Renderer {
 
     public render(gameMap : GameMap){
         var elements = this.gameMap
+        console.log(elements);
         gameMap.renderMap(function(object:Block, x: number, y:number){
             switch(object.status){
                 case BlockStatus.opened:
@@ -362,7 +363,7 @@ class Renderer {
                     elements[x][y].setAttribute("class","block " + "opened");
                 break;
                 case BlockStatus.closed:
-                elements[x][y].removeAttribute("class");
+                    elements[x][y].removeAttribute("class");
                     elements[x][y].setAttribute("class","block " + "closed");
                 break;
             }
@@ -396,7 +397,7 @@ class Game{
         }
 
         this.initBlockResource();
-        //setInterval(this.timeLoop,1000,this);
+        setInterval(this.timeLoop,1000,this);
     }
 
     private initBlockResource(){
