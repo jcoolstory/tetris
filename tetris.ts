@@ -329,7 +329,7 @@ class Renderer {
             }
             table.appendChild(tr);
         }
-        var container = document.getElementById('container')
+        var container = document.getElementById('game')
         
         container.appendChild(table);
 
@@ -349,6 +349,7 @@ class Renderer {
             }
             nextBlock.appendChild(tr);
         }
+        container = document.getElementById('nextblock')
         container.appendChild(nextBlock);
     }
 
@@ -379,10 +380,7 @@ class Renderer {
 
 class Game{
     private gameMap : GameMap;
-    private renderer : Renderer;
-    // private elementGameMap : Element[][] = [];
-    // private elementNextBlock : Element[][] = [];
-    
+    private renderer : Renderer;    
     private timer : number =0;
     private nextBlock : ShapeBlock;
     private resourceBlock : ShapeBlock[] = [];
