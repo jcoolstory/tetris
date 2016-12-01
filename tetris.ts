@@ -5,10 +5,9 @@ enum BlockStatus {
 enum GameStatus{
     Running,Finish, Fail
 }
-var test : Array<Array<Array<number>>> = [[[1]],[[2],[3]]];
 
 //array iterate callback
-interface TraceFunc{
+interface TraceBlockFunc{
     (source:Block,x:number,y:number): void;
 }
 
@@ -119,8 +118,7 @@ class GameMap{
 
     // control block을 map에 복사
     private copyBlock(container:ShapeBlock, position : Point){
-        var offsetx: number = position.x;
-        var offsety: number = position.y;
+
         var arrays: number[][] = container.getCurrentShapeData();
         var shape: number = container.getCurrentShape();
 
@@ -128,8 +126,8 @@ class GameMap{
         for(var i= 0; i< arrays.length ; i++)
         {
             for (var j=0; j<arrays[0].length ;j++){
-                var x : number = offsetx + i;
-                var y : number = offsety + j;
+                var x : number = position.x + i;
+                var y : number = position.y + j;
                 if (arrays[i][j] > 0)
                 {
                     this.table[x][y].shape = arrays[i][j];
@@ -285,21 +283,14 @@ class GameMap{
     }
 
     public doSpace(): boolean{
-        var unarrived : boolean = true;
-        var newPosition =  new Point(this.controlPosition.x,this.controlPosition.y);
-        while (unarrived){
-            this.controlPosition.x = newPosition.x;
-            this.controlPosition.y = newPosition.y;
-            newPosition.y +=1;
-            unarrived = this.validBlockChange(this.controlBlock, newPosition);
+        while(this.doDown()){
+            //pass;
         }
-        this.arriveContainrer();
         return true;
     }
 
     // map block을 callback에 전달 rendering은 render에서 담당
-    public renderMap(callback:Function) : void {
-
+    public renderMap(callback:TraceBlockFunc) : void {
         for (var y : number  = 0 ; y < this.size.y ; y++){
             for (var x : number = 0 ; x < this.size.x ; x++){
                 callback(this.table[x][y], x,y);
@@ -314,9 +305,10 @@ class GameMap{
         var block =  this.controlBlock.getCurrentShapeData();
         for (var y : number  = 0 ; y < block[0].length ; y++){
             for (var x : number = 0 ; x < block.length ; x++){
-                
-                if (this.containsTable(this.controlPosition.x+x,this.controlPosition.y+y)){
-                    callback(block[x][y], this.controlPosition.x+x,this.controlPosition.y+y);
+                var renderPosX = this.controlPosition.x + x;
+                var renderPosY = this.controlPosition.y + y;
+                if (this.containsTable(renderPosX,renderPosY)){
+                    callback(block[x][y], renderPosX,renderPosY);
                 }
             }
         }
@@ -364,7 +356,7 @@ class Renderer {
             var tr = document.createElement("tr");                
             for (var x = 0 ; x < 5 ; x++){
                 var td = document.createElement("td");
-                td.setAttribute("class","block blank ");
+                td.setAttribute("class","block blank");
                 this.nextBlock[x][y] = td;
                 tr.appendChild(td);
             }
@@ -380,20 +372,17 @@ class Renderer {
         gameMap.renderMap(function(object:Block, x: number, y:number){
             switch(object.status){
                 case BlockStatus.opened:
-                    elements[x][y].removeAttribute("class");
-                    elements[x][y].setAttribute("class","block " + "opened");
+                    elements[x][y].setAttribute("class","block opened");
                 break;
                 case BlockStatus.closed:
-                    elements[x][y].removeAttribute("class");
-                    elements[x][y].setAttribute("class","block " + "closed");
+                    elements[x][y].setAttribute("class","block closed");
                 break;
             }
         });
         gameMap.renderControl(function(object:number, x: number, y:number){
             switch(object){
                 case 1:
-                    elements[x][y].removeAttribute("class");
-                    elements[x][y].setAttribute("class","block " + "opened");
+                    elements[x][y].setAttribute("class","block opened");
                 break;
             }
         });
@@ -405,10 +394,20 @@ class Renderer {
 }
 
 class Game{
+
+    // game 영역
     private gameMap : GameMap;
-    private renderer : Renderer;    
+
+    // html renderer
+    private renderer : Renderer;
+
+    // block drop timer    
     private timer : number =0;
+
+    // nexblock
     private nextBlock : ShapeBlock;
+
+    // 블럭모양 리소스저장
     private resourceBlock : ShapeBlock[] = [];
 
     public run() : void {
@@ -464,7 +463,6 @@ class Game{
     private timeLoop(obj:Game) {
         var result =obj.gameMap.doDown();
         if (!result){
-                console.log("arrive");
                 obj.pushNewBlock(obj.nextBlock);
             }
         obj.render();
