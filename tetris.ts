@@ -182,23 +182,32 @@ class GameMap{
     // down 또는 fall하여 바닥도착시 블럭 복사
     private arriveContainrer(){
         this.copyBlock(this.controlBlock,this.controlPosition);
+        this.checkBlockClear();
     }
 
+    private checkBlockClear(){
+        var rows = this.checkDeleteRow();
+        
+                console.log(rows);
+        this.clearRow(rows);
+        this.replaceRow(rows);
+    }
     // map에서 삭제할 row를 list로 반환
     private checkDeleteRow() : number[] {
         var deleteRows : number[] = [];
-        for(var i = 0 ; i< this.size.y; i++){
+        for (var i = this.size.y-1 ;  i >=0 ; i--){
             var fullRow : boolean = true;
             // 모든 칸이 다 채워져있는지 확인
             for ( var j = 0 ; j < this.size.x ; j++){
-                if (this.table[i][j].shape < 0){
+                if (this.table[j][i].shape < 0){
                     fullRow = false;
                     break;
                 }
             }
 
-            if (fullRow)
+            if (fullRow){
                 deleteRows.push(i);
+            }
         }
 
         return deleteRows;
@@ -208,7 +217,8 @@ class GameMap{
     private clearRow(rows:number[]){
         rows.forEach(i => {
             for ( var j = 0 ; j < this.size.x ; j++){
-                this.table[i][j].shape = -1;
+                this.table[j][i].shape = -1;
+                this.table[j][i].status = BlockStatus.closed;
             }
         });
 
@@ -221,19 +231,23 @@ class GameMap{
 
     private replaceRow(rows : number[]) {
         var offset : number  = 0;
-        var x =  rows.shift();
-        for (var y = 0 ;  y < this.size.y ; y++){
-            if (x==y){
+        var deleteRow =  rows.shift();
+        if(!deleteRow)
+            return;
+        for (var y = this.size.y-1 ;  y >0 ; y--){
+            if (deleteRow==y){
                 offset++;
-                x = rows.shift();
+                deleteRow = rows.shift();
             }
 
             if (offset == 0)
+            {
                 continue;
-
+            }
+            
             for (var x = 0 ; x < this.size.x ; x++){
-                var srcBlock : Block = this.table[x][y];
-                var destBlock : Block = this.table[x][y-offset];
+                var srcBlock : Block = this.table[x][y-1];
+                var destBlock : Block = this.table[x][y-1+offset];
                 destBlock.shape = srcBlock.shape;
                 destBlock.status = srcBlock.status;
                 srcBlock.shape = -1;
