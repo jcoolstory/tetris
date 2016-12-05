@@ -95,7 +95,7 @@ class GameMap{
 
     public init(size:Point) : void{
         this.size = size;
-        this.insertPosition = new Point(size.x/2-1,0);
+        this.insertPosition = new Point(size.x/2-1,-1);
         this.initMap();
     }
 
@@ -151,6 +151,17 @@ class GameMap{
         return true;
     }
 
+    // 좌표가 map의 범위에 포함되어있는지 체크
+    private validTable(x:number, y:number) : boolean {
+        if (0 > x)
+            return false;
+        if (x >= this.size.x)
+            return false;
+        if (y >= this.size.y)
+            return false;
+        return true;
+    }
+
     // controlblock을 위아래좌우 이동시 블럭이 변경가능한지 체크
     private validBlockChange(container:ShapeBlock, position:Point) :boolean{
         var width = container.getCurrentShapeData().length;
@@ -166,13 +177,15 @@ class GameMap{
                 var x = position.x + i;
                 var y = position.y + j;
                 // 맵 범위에 벗어나면 false
-                if (!this.containsTable(x,y)){
+                if (!this.validTable(x,y)){
                     return false;
                 }
-
-                // 특정위치에 블럭이 존재하면 false
-                if (this.table[x][y].status == BlockStatus.opened){
-                    return false;
+                if (y>0)
+                {
+                    // 특정위치에 블럭이 존재하면 false
+                    if (this.table[x][y].status == BlockStatus.opened){
+                        return false;
+                    }
                 }
             }
         }
@@ -244,7 +257,7 @@ class GameMap{
             {
                 continue;
             }
-            
+
             for (var x = 0 ; x < this.size.x ; x++){
                 var srcBlock : Block = this.table[x][y-1];
                 var destBlock : Block = this.table[x][y-1+offset];
