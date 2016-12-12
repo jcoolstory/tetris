@@ -95,7 +95,7 @@ class GameMap{
 
     public init(size:Point) : void{
         this.size = size;
-        this.insertPosition = new Point(size.x/2-1,0);
+        this.insertPosition = new Point(size.x/2-1,-1);
         this.initMap();
     }
 
@@ -151,6 +151,17 @@ class GameMap{
         return true;
     }
 
+    // 좌표가 map의 범위에 포함되어있는지 체크
+    private validTable(x:number, y:number) : boolean {
+        if (0 > x)
+            return false;
+        if (x >= this.size.x)
+            return false;
+        if (y >= this.size.y)
+            return false;
+        return true;
+    }
+
     // controlblock을 위아래좌우 이동시 블럭이 변경가능한지 체크
     private validBlockChange(container:ShapeBlock, position:Point) :boolean{
         var width = container.getCurrentShapeData().length;
@@ -166,13 +177,15 @@ class GameMap{
                 var x = position.x + i;
                 var y = position.y + j;
                 // 맵 범위에 벗어나면 false
-                if (!this.containsTable(x,y)){
+                if (!this.validTable(x,y)){
                     return false;
                 }
-
-                // 특정위치에 블럭이 존재하면 false
-                if (this.table[x][y].status == BlockStatus.opened){
-                    return false;
+                if (y>0)
+                {
+                    // 특정위치에 블럭이 존재하면 false
+                    if (this.table[x][y].status == BlockStatus.opened){
+                        return false;
+                    }
                 }
             }
         }
@@ -182,23 +195,32 @@ class GameMap{
     // down 또는 fall하여 바닥도착시 블럭 복사
     private arriveContainrer(){
         this.copyBlock(this.controlBlock,this.controlPosition);
+        this.checkBlockClear();
     }
 
+    private checkBlockClear(){
+        var rows = this.checkDeleteRow();
+
+                //console.log(rows);
+        this.clearRow(rows);
+        this.replaceRow(rows);
+    }
     // map에서 삭제할 row를 list로 반환
     private checkDeleteRow() : number[] {
         var deleteRows : number[] = [];
-        for(var i = 0 ; i< this.size.y; i++){
+        for (var i = this.size.y-1 ;  i >=0 ; i--){
             var fullRow : boolean = true;
             // 모든 칸이 다 채워져있는지 확인
             for ( var j = 0 ; j < this.size.x ; j++){
-                if (this.table[i][j].shape < 0){
+                if (this.table[j][i].shape < 0){
                     fullRow = false;
                     break;
                 }
             }
 
-            if (fullRow)
+            if (fullRow){
                 deleteRows.push(i);
+            }
         }
 
         return deleteRows;
@@ -208,7 +230,8 @@ class GameMap{
     private clearRow(rows:number[]){
         rows.forEach(i => {
             for ( var j = 0 ; j < this.size.x ; j++){
-                this.table[i][j].shape = -1;
+                this.table[j][i].shape = -1;
+                this.table[j][i].status = BlockStatus.closed;
             }
         });
 
@@ -221,19 +244,23 @@ class GameMap{
 
     private replaceRow(rows : number[]) {
         var offset : number  = 0;
-        var x =  rows.shift();
-        for (var y = 0 ;  y < this.size.y ; y++){
-            if (x==y){
+        var deleteRow =  rows.shift();
+        if(!deleteRow)
+            return;
+        for (var y = this.size.y-1 ;  y >0 ; y--){
+            if (deleteRow==y){
                 offset++;
-                x = rows.shift();
+                deleteRow = rows.shift();
             }
 
             if (offset == 0)
+            {
                 continue;
+            }
 
             for (var x = 0 ; x < this.size.x ; x++){
-                var srcBlock : Block = this.table[x][y];
-                var destBlock : Block = this.table[x][y-offset];
+                var srcBlock : Block = this.table[x][y-1];
+                var destBlock : Block = this.table[x][y-1+offset];
                 destBlock.shape = srcBlock.shape;
                 destBlock.status = srcBlock.status;
                 srcBlock.shape = -1;
@@ -358,7 +385,7 @@ class Renderer {
         }
 
         var nextBlockElement = document.createElement("table");
-        nextBlockElement.setAttribute("id","nextblock");
+        nextBlockElement.setAttribute("id","nextblockTable");//2016.12.13 현 엘리먼트를 감싸는 아이디와 동일 해서 수정.
         for( var y = 0 ; y < 5 ; y++ ){
             var tr = document.createElement("tr");
             for (var x = 0 ; x < 5 ; x++){
@@ -469,10 +496,37 @@ class Game{
     // timer에 맞쳐 블럭 down
     private timeLoop(obj:Game) {
         var result =obj.gameMap.doDown();
+        obj.nextBlocks();
         if (!result){
-                obj.pushNewBlock(obj.nextBlock);
-            }
+          obj.pushNewBlock(obj.nextBlock);
+        }
         obj.render();
+    }
+
+    /*2016.12.13 nextBlocks 다음에 나올 블록 모양 노출*/
+    private nextBlocks(){
+        var nextArray = this.nextBlock.blocks;
+        var nextBlockTable = document.getElementById("nextblockTable");
+        var nextBlockChild = nextBlockTable.children;
+
+        for(var y = 0; y < nextBlockChild.length; y++){
+          for(var x = 0; x < nextBlockChild[y].children.length; x++){
+            nextBlockChild[y].children[x].setAttribute("class", "block blank");
+          }
+        }
+
+        for(var n = 0; n < nextArray.length; n++){
+          for(var i = 0; i < nextArray[n].length; i++){
+            for(var j = 0; j < nextArray[n][i].length; j++){
+                if(nextArray[n][i][j] == 1){
+                  nextBlockChild[i].children[j].setAttribute("class", "block opened");
+                }else{
+                  nextBlockChild[i].children[j].setAttribute("class", "block blank");
+                }
+            }
+          }
+        }
+
     }
 
     private OnKeyDown(evt:KeyboardEvent) : any{
@@ -507,7 +561,13 @@ class Game{
     }
 
     private render() : void{
+        this.gameOver();
         this.renderer.render(this.gameMap);
+    }
+
+    /*2016.12.13게임오버시 필요한 함수만 생성. 필요한 값을 찾지 못해 아직 만들지 못함*/
+    private gameOver(): Boolean{
+      return true;
     }
 }
 
