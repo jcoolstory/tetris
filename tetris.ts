@@ -385,7 +385,7 @@ class Renderer {
         }
 
         var nextBlockElement = document.createElement("table");
-        nextBlockElement.setAttribute("id","nextblock");
+        nextBlockElement.setAttribute("id","nextblockTable");//2016.12.13 현 엘리먼트를 감싸는 아이디와 동일 해서 수정.
         for( var y = 0 ; y < 5 ; y++ ){
             var tr = document.createElement("tr");
             for (var x = 0 ; x < 5 ; x++){
@@ -496,10 +496,37 @@ class Game{
     // timer에 맞쳐 블럭 down
     private timeLoop(obj:Game) {
         var result =obj.gameMap.doDown();
+        obj.nextBlocks();
         if (!result){
-                obj.pushNewBlock(obj.nextBlock);
-            }
+          obj.pushNewBlock(obj.nextBlock);
+        }
         obj.render();
+    }
+
+    /*2016.12.13 nextBlocks 다음에 나올 블록 모양 노출*/
+    private nextBlocks(){
+        var nextArray = this.nextBlock.blocks;
+        var nextBlockTable = document.getElementById("nextblockTable");
+        var nextBlockChild = nextBlockTable.children;
+
+        for(var y = 0; y < nextBlockChild.length; y++){
+          for(var x = 0; x < nextBlockChild[y].children.length; x++){
+            nextBlockChild[y].children[x].setAttribute("class", "block blank");
+          }
+        }
+
+        for(var n = 0; n < nextArray.length; n++){
+          for(var i = 0; i < nextArray[n].length; i++){
+            for(var j = 0; j < nextArray[n][i].length; j++){
+                if(nextArray[n][i][j] == 1){
+                  nextBlockChild[i].children[j].setAttribute("class", "block opened");
+                }else{
+                  nextBlockChild[i].children[j].setAttribute("class", "block blank");
+                }
+            }
+          }
+        }
+
     }
 
     private OnKeyDown(evt:KeyboardEvent) : any{
@@ -534,7 +561,13 @@ class Game{
     }
 
     private render() : void{
+        this.gameOver();
         this.renderer.render(this.gameMap);
+    }
+
+    /*2016.12.13게임오버시 필요한 함수만 생성. 필요한 값을 찾지 못해 아직 만들지 못함*/
+    private gameOver(): Boolean{
+      return true;
     }
 }
 
