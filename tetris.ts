@@ -518,7 +518,7 @@ class Game{
         for(var n = 0; n < nextArray.length; n++){
           for(var i = 0; i < nextArray[n].length; i++){
             for(var j = 0; j < nextArray[n][i].length; j++){
-                if(nextArray[n][i][j] == 1){
+                if(nextArray[n][nextArray[n].length - 1 - i][j] == 1){
                   nextBlockChild[i].children[j].setAttribute("class", "block opened");
                 }else{
                   nextBlockChild[i].children[j].setAttribute("class", "block blank");
